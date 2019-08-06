@@ -55,24 +55,26 @@ Note: the metadata from the included source files are discarded.
 
 import           Control.Monad
 import           Data.List
+import           Data.Text (Text)
+import qualified Data.Text.IO as Text
 import           System.Directory
 
 import           Text.Pandoc
 import           Text.Pandoc.Error
 import           Text.Pandoc.JSON
 
-stripPandoc :: Either PandocError Pandoc -> [Block]
+stripPandoc :: PandocPure Pandoc -> [Block]
 stripPandoc p =
-  case p of
+  case runPure p of
     Left _ -> [Null]
     Right (Pandoc _ blocks) -> blocks
 
-ioReadMarkdown :: String -> IO(Either PandocError Pandoc)
+ioReadMarkdown :: PandocMonad m => Text -> IO (m Pandoc)
 ioReadMarkdown content = return $! readMarkdown def content
 
 getContent :: String -> IO [Block]
 getContent file = do
-  c <- readFile file
+  c <- Text.readFile file
   p <- ioReadMarkdown c
   return $! stripPandoc p
 
